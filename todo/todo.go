@@ -31,9 +31,18 @@ func NewTodoHandler(store storer) *TodoHandler {
 	return &TodoHandler{store: store}
 }
 
-func (t *TodoHandler) NewTask(c *gin.Context) {
+// create type to change behavior
+type Context interface {
+	Bind(interface{}) error
+	JSON(int, interface{})
+	TransactionID() string
+	Audience() string
+}
+
+func (t *TodoHandler) NewTask(c Context) {
 	var todo Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
+	// if err := c.ShouldBindJSON(&todo); err != nil {
+	if err := c.Bind(&todo); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -41,8 +50,10 @@ func (t *TodoHandler) NewTask(c *gin.Context) {
 	}
 
 	if todo.Title == "sleep" {
-		transactionID := c.Request.Header.Get("TransactionID")
-		aud, _ := c.Get("aud")
+		// transactionID := c.Request.Header.Get("TransactionID")
+		transactionID := c.TransactionID()
+		// aud, _ := c.Get("aud")
+		aud := c.Audience()
 		log.Println(transactionID, aud, "not allowed")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "not allowed",
