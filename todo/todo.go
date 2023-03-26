@@ -14,6 +14,10 @@ type Todo struct {
 	gorm.Model
 }
 
+// to create
+type storer interface {
+}
+
 func (Todo) TableName() string {
 	return "todos"
 }
