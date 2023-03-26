@@ -14,8 +14,9 @@ type Todo struct {
 	gorm.Model
 }
 
-// to create
+// to create storer interface
 type storer interface {
+	New(*Todo) error
 }
 
 func (Todo) TableName() string {
@@ -23,11 +24,12 @@ func (Todo) TableName() string {
 }
 
 type TodoHandler struct {
-	db *gorm.DB
+	//db *gorm.DB
+	store storer
 }
 
-func NewTodoHandler(db *gorm.DB) *TodoHandler {
-	return &TodoHandler{db: db}
+func NewTodoHandler(store storer) *TodoHandler {
+	return &TodoHandler{store: store}
 }
 
 func (t *TodoHandler) NewTask(c *gin.Context) {
@@ -49,8 +51,9 @@ func (t *TodoHandler) NewTask(c *gin.Context) {
 		return
 	}
 
-	r := t.db.Create(&todo)
-	if err := r.Error; err != nil {
+	//r := t.db.Create(&todo)
+	err := t.store.New(&todo)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
